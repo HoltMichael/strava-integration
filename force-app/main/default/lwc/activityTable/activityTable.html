@@ -1,0 +1,24 @@
+<template>
+
+    <!--<lightning-button label="Customise Table" variant="brand" onclick={handleShowColumnSelector}></lightning-button>-->
+
+    <!--<template if:true={showColumnSelector}>
+        <c-column-selector></c-column-selector>
+    </template>-->
+
+
+    <template if:true={activities}>
+        <lightning-datatable style="height: 300px;"
+                            key-field="id" 
+                            data={activities} 
+                            columns={columns} 
+                            hide-checkbox-column="true"
+                            show-row-number-column="true"
+                            onsort={updateColumnSorting}
+                            sorted-by={sortBy}
+                            sorted-direction={sortDirection}
+                            
+                            > <!--is-loading={isLoading} --> <!--style="min-height: 12em;" -->
+        </lightning-datatable>
+    </template>
+</template>

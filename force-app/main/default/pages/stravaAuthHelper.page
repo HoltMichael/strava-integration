@@ -1,0 +1,5 @@
+<apex:page controller="StravaAuthController" action="{!redirect}">
+	<apex:outputText rendered="{!Code != null}">
+    	<p>You can now close this window, thank you for authenticating to Strava</p>
+    </apex:outputText>
+</apex:page>

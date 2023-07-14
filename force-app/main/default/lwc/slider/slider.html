@@ -1,0 +1,11 @@
+<template>
+    <lightning-card title={title} icon-name="standard:settings">
+        <template if:true={maxVal}>
+            <div class='slds-p-around_medium'>
+                <lightning-slider label="Maximum Distance (m)" max={max} min={min} value={maxVal} onchange={handleSlider} data-name="max"></lightning-slider>
+                <lightning-slider label="Minimum Distance (m)" max={max} min={min} value={minVal} onchange={handleSlider} data-name="min"></lightning-slider>
+            </div>
+        </template>
+    </lightning-card>
+
+</template>

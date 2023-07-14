@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+<masterLabel>stravaDetails</masterLabel>
+    <description></description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>activities</description>
+        <fieldName>activities</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>type</description>
+        <fieldName>type</fieldName>
+    </lightningMessageFields>
+</LightningMessageChannel>

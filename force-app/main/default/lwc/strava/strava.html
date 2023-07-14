@@ -1,0 +1,25 @@
+<template>
+    <lightning-card title={title} icon-name="standard:settings">
+        <!--<div class="slds-m-top_medium slds-m-left_medium">
+            <template if:true={isReady}>
+                <template for:each={results} for:item="result">
+                    <p key={result.id}>
+                        Name: {result.name} 
+                        Max Speed: {result.max_speed} 
+                        Distance: {result.distance} 
+                        Moving Time: {result.moving_time} 
+                        Type: {result.type} 
+                        Kudos Count: {result.kudos_count}
+                        Start Date: {result.start_date_local} 
+                        Start Latitude: {result.start_latitude}
+                        Start Longitude: {result.start_longitude}
+                        
+                    </p>
+                </template>
+            </template>
+        </div>-->
+
+        <div class="slds-box mapper slds-theme_default" style="height: 30rem;" lwc:dom="manual"></div>
+
+    </lightning-card>
+</template>

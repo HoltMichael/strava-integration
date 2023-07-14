@@ -1,0 +1,13 @@
+<apex:page sidebar="false" showHeader="false" controller="TwitterOauth2Demo">
+    <apex:form id="FormId">
+        <p/>
+        <apex:commandButton action="{!getTokenFromTwitter}" value="Genertae Access Token" rerender="resultSection"/> 
+        <apex:commandButton action="{!getTweetTimelines}" value="Get Twitter Timeline" rerender="resultSection"/> 
+        <p/>
+        <apex:outputPanel id="resultSection">
+            Token : {!generatedToken} <p/>
+            Error Message : {!errorMessage} <p/>
+            Twitter TimeLine JSON : <br/> {!twitterTimelineResponse } <br/>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>
