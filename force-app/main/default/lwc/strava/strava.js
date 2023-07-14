@@ -42,9 +42,7 @@ export default class Strava extends LightningElement {
     }
 
     connectedCallback(){
-        console.log('xxx');
         this.subscribeToMessageChannel();
-        console.log('yyy');
     }
 
     subscribeToMessageChannel() {
@@ -80,13 +78,8 @@ export default class Strava extends LightningElement {
             }).addTo(map);
             
             var coordinates;
-            console.log('data');
-            console.log(JSON.stringify(data));
             if(data){
-                
                 data.forEach(element => {
-                    console.log('hello');
-                    console.log(element.map.summary_polyline);
                     if(element.map.summary_polyline){
                         coordinates = L.Polyline.fromEncoded(element.map.summary_polyline).getLatLngs();
         
@@ -125,7 +118,6 @@ export default class Strava extends LightningElement {
     @wire(getUserCreds)
     getUserCreds({error, data}){
         if(data){
-            console.log(data.Refresh__c);
             this.reAuthorise(data.Refresh__c)
             this.authorised = true;
         }else if(error){
@@ -145,9 +137,7 @@ export default class Strava extends LightningElement {
     
     
     getActivities(authorisation){
-        console.log('111');
         if(this.authorised){
-            console.log('222');
             const activitiesUrl = 'https://www.strava.com/api/v3/athlete/activities?per_page=199&access_token=' + authorisation.access_token;
             fetch(activitiesUrl)
                 .then((result) => this.results = result.json())

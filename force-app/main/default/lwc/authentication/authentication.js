@@ -24,15 +24,4 @@ export default class Authentication extends NavigationMixin(LightningElement)  {
         });
         this.dispatchEvent(event);
     }
-
-    /*handleLogin() {
-        console.log(this.authUrl);
-        this[NavigationMixin.Navigate]({
-            "type": "standard__webPage",
-            "attributes": {
-                url: this.authUrl
-            }
-        });
-    }*/
-
 }

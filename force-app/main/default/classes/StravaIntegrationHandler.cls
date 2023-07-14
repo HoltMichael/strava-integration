@@ -26,12 +26,10 @@ public without sharing class StravaIntegrationHandler {
 
         id userId = userInfo.getUserId();
         User u = [SELECT id, Profile.Name FROM User WHERE id =: userId];
-        //https://mhstrava-dev-ed.my.site.com/strava/s/ //mhstrava-developer-edition.um7.force.com
         String authURL = 'https://www.strava.com/oauth/authorize?';
         List<String> urlParams = new List<String>{ authURL };
         urlParams.add('client_id=62539');
-        //urlParams.add('redirect_uri=https://mhstrava-dev-ed.builder.salesforce-communities.com/sfsites/picasso/core/config/commeditor.jsp'); //https://login.salesforce.com/apex/stravaAuthHelper'); //('redirect_uri=https%3A%2F%2Flogin.salesforce.com%2Fapex%2Fstravaauth');
-        urlParams.add('redirect_uri=https://mhstrava-developer-edition.um7.force.com/apex/stravaAuthHelper'); //https://login.salesforce.com/apex/stravaAuthHelper'); //('redirect_uri=https%3A%2F%2Flogin.salesforce.com%2Fapex%2Fstravaauth');
+        urlParams.add('redirect_uri=https://mhstrava-developer-edition.um7.force.com/apex/stravaAuthHelper');
         urlParams.add('response_type=code');
         urlParams.add('scope=activity:read_all');
 		return String.join(urlParams, '&');
