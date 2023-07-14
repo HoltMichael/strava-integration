@@ -42,7 +42,9 @@ export default class Strava extends LightningElement {
     }
 
     connectedCallback(){
+        console.log('xxx');
         this.subscribeToMessageChannel();
+        console.log('yyy');
     }
 
     subscribeToMessageChannel() {
@@ -52,7 +54,7 @@ export default class Strava extends LightningElement {
             (message) => {
                 console.log(message);
                 if(message.type == 'Filtered'){
-                    //this.draw(message.activities);
+                    this.draw(message.activities);
                 }
             }
         );
@@ -78,7 +80,10 @@ export default class Strava extends LightningElement {
             }).addTo(map);
             
             var coordinates;
+            console.log('data');
+            console.log(JSON.stringify(data));
             if(data){
+                
                 data.forEach(element => {
                     console.log('hello');
                     console.log(element.map.summary_polyline);
@@ -140,7 +145,9 @@ export default class Strava extends LightningElement {
     
     
     getActivities(authorisation){
+        console.log('111');
         if(this.authorised){
+            console.log('222');
             const activitiesUrl = 'https://www.strava.com/api/v3/athlete/activities?per_page=199&access_token=' + authorisation.access_token;
             fetch(activitiesUrl)
                 .then((result) => this.results = result.json())
@@ -152,14 +159,14 @@ export default class Strava extends LightningElement {
                     console.log(this.results);
                     
                     const activities = {activities: this.results, type: 'All'};
-
+                    console.log(JSON.stringify(activities));
                     publish(this.messageContext,STRAVA_DETAILS, activities);
                     Promise.all([
                         loadStyle(this, LEAFLET + '/leaflet/leaflet.css'),
                         loadScript(this, LEAFLET + '/leaflet/leaflet.js'),
                         loadScript(this, LEAFLET + '/leaflet/polyline.js')
                     ]).then(() => {
-                        this.draw(null);
+                        this.draw(data);
                     })
                     
                 })
