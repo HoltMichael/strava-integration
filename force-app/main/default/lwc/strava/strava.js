@@ -7,7 +7,7 @@ import NICKNAME_FIELD from '@salesforce/schema/User.CommunityNickname';
 
 //Required for showing the map
 import { loadScript, loadStyle } from 'lightning/platformResourceLoader';
-import LEAFLET from '@salesforce/resourceUrl/Leaflet';;
+import LEAFLET from '@salesforce/resourceUrl/Leaflet';
 
 //Required for passing data to other components on the page
 import STRAVA_DETAILS from '@salesforce/messageChannel/stravaDetails__c';

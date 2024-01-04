@@ -43,3 +43,10 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+
+**/layouts/**
+**/AppSwitcher.appMenu*
+**/navigationMenus/*
+**/flexipages/**
+force-app/main/default/customMetadata/API_Connection.Strava.md-meta.xml

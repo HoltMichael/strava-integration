@@ -29,7 +29,7 @@ public without sharing class StravaIntegrationHandler {
         String authURL = 'https://www.strava.com/oauth/authorize?';
         List<String> urlParams = new List<String>{ authURL };
         urlParams.add('client_id=62539');
-        urlParams.add('redirect_uri=https://mhstrava-developer-edition.um7.force.com/apex/stravaAuthHelper');
+        urlParams.add('redirect_uri=https://nosoftware-efficiency-1198-dev-ed--c.scratch.vf.force.com/apex/stravaAuthHelper');
         urlParams.add('response_type=code');
         urlParams.add('scope=activity:read_all');
 		return String.join(urlParams, '&');
