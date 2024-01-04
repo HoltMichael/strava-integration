@@ -65,6 +65,9 @@ export default class Strava extends LightningElement {
             loadScript(this, LEAFLET + '/leaflet/leaflet.js'),
             loadScript(this, LEAFLET + '/leaflet/polyline.js')
         ]).then(() => {
+            console.log('Leaflet and Plugins Loaded');
+            console.log('L.Polyline:', L.Polyline); // Check what's available on L.Polyline
+
             let container = this.template.querySelector(".mapper");
             //let container = this.template.querySelector('div');
             let position = [51.9231987, 0.9836457];
@@ -107,6 +110,11 @@ export default class Strava extends LightningElement {
                     map.setView(coordinates[0], 13);
                 });
             }
+        }).catch(error => {
+            console.error('Error loading Leaflet and Plugins:', error.message, error.name, error.stack);
+            console.error('Error loading Leaflet and Plugins:', JSON.stringify(error, null, 2));
+            //this.draw(data);
+
         });
        
     }

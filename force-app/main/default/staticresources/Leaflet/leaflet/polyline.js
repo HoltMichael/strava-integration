@@ -1,153 +1,232 @@
-'use strict';
-
-/**
- * Based off of [the offical Google document](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+/*
+ * Utility functions to decode/encode numbers and array's of numbers
+ * to/from strings (Google maps polyline encoding)
  *
- * Some parts from [this implementation](http://facstaff.unca.edu/mcmcclur/GoogleMaps/EncodePolyline/PolylineEncoder.js)
- * by [Mark McClure](http://facstaff.unca.edu/mcmcclur/)
+ * Extends the L.Polyline and L.Polygon object with methods to convert
+ * to and create from these strings.
  *
- * @module polyline
+ * Original code from:
+ * Jan Pieter Waagmeester <jieter@jieter.nl>
+ * https://github.com/jieter/Leaflet.encoded/blob/c186c7c75d9d255abb8ac342ad52d4ac0c25ca02/Polyline.encoded.js#L213
+ * 
  */
 
-var polyline = {};
+(function () {
+    'use strict';
 
-function encode(coordinate, factor) {
-    coordinate = Math.round(coordinate * factor);
-    coordinate <<= 1;
-    if (coordinate < 0) {
-        coordinate = ~coordinate;
-    }
-    var output = '';
-    while (coordinate >= 0x20) {
-        output += String.fromCharCode((0x20 | (coordinate & 0x1f)) + 63);
-        coordinate >>= 5;
-    }
-    output += String.fromCharCode(coordinate + 63);
-    return output;
-}
+    var defaultOptions = function (options) {
+        if (typeof options === 'number') {
+            // Legacy
+            options = {
+                precision: options
+            };
+        } else {
+            options = options || {};
+        }
 
-/**
- * Decodes to a [latitude, longitude] coordinates array.
- *
- * This is adapted from the implementation in Project-OSRM.
- *
- * @param {String} str
- * @param {Number} precision
- * @returns {Array}
- *
- * @see https://github.com/Project-OSRM/osrm-frontend/blob/master/WebContent/routing/OSRM.RoutingGeometry.js
- */
-polyline.decode = function(str, precision) {
-    var index = 0,
-        lat = 0,
-        lng = 0,
-        coordinates = [],
-        shift = 0,
-        result = 0,
-        byte = null,
-        latitude_change,
-        longitude_change,
-        factor = Math.pow(10, precision || 5);
-
-    // Coordinates have variable length when encoded, so just keep
-    // track of whether we've hit the end of the string. In each
-    // loop iteration, a single coordinate is decoded.
-    while (index < str.length) {
-
-        // Reset shift, result, and byte
-        byte = null;
-        shift = 0;
-        result = 0;
-
-        do {
-            byte = str.charCodeAt(index++) - 63;
-            result |= (byte & 0x1f) << shift;
-            shift += 5;
-        } while (byte >= 0x20);
-
-        latitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
-
-        shift = result = 0;
-
-        do {
-            byte = str.charCodeAt(index++) - 63;
-            result |= (byte & 0x1f) << shift;
-            shift += 5;
-        } while (byte >= 0x20);
-
-        longitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
-
-        lat += latitude_change;
-        lng += longitude_change;
-
-        coordinates.push([lat / factor, lng / factor]);
-    }
-
-    return coordinates;
-};
-
-/**
- * Encodes the given [latitude, longitude] coordinates array.
- *
- * @param {Array.<Array.<Number>>} coordinates
- * @param {Number} precision
- * @returns {String}
- */
-polyline.encode = function(coordinates, precision) {
-    if (!coordinates.length) { return ''; }
-
-    var factor = Math.pow(10, precision || 5),
-        output = encode(coordinates[0][0], factor) + encode(coordinates[0][1], factor);
-
-    for (var i = 1; i < coordinates.length; i++) {
-        var a = coordinates[i], b = coordinates[i - 1];
-        output += encode(a[0] - b[0], factor);
-        output += encode(a[1] - b[1], factor);
-    }
-
-    return output;
-};
-
-function flipped(coords) {
-    var flipped = [];
-    for (var i = 0; i < coords.length; i++) {
-        flipped.push(coords[i].slice().reverse());
-    }
-    return flipped;
-}
-
-/**
- * Encodes a GeoJSON LineString feature/geometry.
- *
- * @param {Object} geojson
- * @param {Number} precision
- * @returns {String}
- */
-polyline.fromGeoJSON = function(geojson, precision) {
-    if (geojson && geojson.type === 'Feature') {
-        geojson = geojson.geometry;
-    }
-    if (!geojson || geojson.type !== 'LineString') {
-        throw new Error('Input must be a GeoJSON LineString');
-    }
-    return polyline.encode(flipped(geojson.coordinates), precision);
-};
-
-/**
- * Decodes to a GeoJSON LineString geometry.
- *
- * @param {String} str
- * @param {Number} precision
- * @returns {Object}
- */
-polyline.toGeoJSON = function(str, precision) {
-    var coords = polyline.decode(str, precision);
-    return {
-        type: 'LineString',
-        coordinates: flipped(coords)
+        options.precision = options.precision || 5;
+        options.factor = options.factor || Math.pow(10, options.precision);
+        options.dimension = options.dimension || 2;
+        return options;
     };
-};
 
-if (typeof module === 'object' && module.exports) {
-    module.exports = polyline;
-}
+    var PolylineUtil = {
+        encode: function (points, options) {
+            options = defaultOptions(options);
+
+            var flatPoints = [];
+            for (var i = 0, len = points.length; i < len; ++i) {
+                var point = points[i];
+
+                if (options.dimension === 2) {
+                    flatPoints.push(point.lat || point[0]);
+                    flatPoints.push(point.lng || point[1]);
+                } else {
+                    for (var dim = 0; dim < options.dimension; ++dim) {
+                        flatPoints.push(point[dim]);
+                    }
+                }
+            }
+
+            return this.encodeDeltas(flatPoints, options);
+        },
+
+        decode: function (encoded, options) {
+            options = defaultOptions(options);
+
+            var flatPoints = this.decodeDeltas(encoded, options);
+
+            var points = [];
+            for (var i = 0, len = flatPoints.length; i + (options.dimension - 1) < len;) {
+                var point = [];
+
+                for (var dim = 0; dim < options.dimension; ++dim) {
+                    point.push(flatPoints[i++]);
+                }
+
+                points.push(point);
+            }
+
+            return points;
+        },
+
+        encodeDeltas: function (numbers, options) {
+            options = defaultOptions(options);
+
+            var lastNumbers = [];
+
+            for (var i = 0, len = numbers.length; i < len;) {
+                for (var d = 0; d < options.dimension; ++d, ++i) {
+                    var num = numbers[i].toFixed(options.precision);
+                    var delta = num - (lastNumbers[d] || 0);
+                    lastNumbers[d] = num;
+
+                    numbers[i] = delta;
+                }
+            }
+
+            return this.encodeFloats(numbers, options);
+        },
+
+        decodeDeltas: function (encoded, options) {
+            options = defaultOptions(options);
+
+            var lastNumbers = [];
+
+            var numbers = this.decodeFloats(encoded, options);
+            for (var i = 0, len = numbers.length; i < len;) {
+                for (var d = 0; d < options.dimension; ++d, ++i) {
+                    numbers[i] = Math.round((lastNumbers[d] = numbers[i] + (lastNumbers[d] || 0)) * options.factor) / options.factor;
+                }
+            }
+
+            return numbers;
+        },
+
+        encodeFloats: function (numbers, options) {
+            options = defaultOptions(options);
+
+            for (var i = 0, len = numbers.length; i < len; ++i) {
+                numbers[i] = Math.round(numbers[i] * options.factor);
+            }
+
+            return this.encodeSignedIntegers(numbers);
+        },
+
+        decodeFloats: function (encoded, options) {
+            options = defaultOptions(options);
+
+            var numbers = this.decodeSignedIntegers(encoded);
+            for (var i = 0, len = numbers.length; i < len; ++i) {
+                numbers[i] /= options.factor;
+            }
+
+            return numbers;
+        },
+
+        encodeSignedIntegers: function (numbers) {
+            for (var i = 0, len = numbers.length; i < len; ++i) {
+                var num = numbers[i];
+                numbers[i] = (num < 0) ? ~(num << 1) : (num << 1);
+            }
+
+            return this.encodeUnsignedIntegers(numbers);
+        },
+
+        decodeSignedIntegers: function (encoded) {
+            var numbers = this.decodeUnsignedIntegers(encoded);
+
+            for (var i = 0, len = numbers.length; i < len; ++i) {
+                var num = numbers[i];
+                numbers[i] = (num & 1) ? ~(num >> 1) : (num >> 1);
+            }
+
+            return numbers;
+        },
+
+        encodeUnsignedIntegers: function (numbers) {
+            var encoded = '';
+            for (var i = 0, len = numbers.length; i < len; ++i) {
+                encoded += this.encodeUnsignedInteger(numbers[i]);
+            }
+            return encoded;
+        },
+
+        decodeUnsignedIntegers: function (encoded) {
+            var numbers = [];
+
+            var current = 0;
+            var shift = 0;
+
+            for (var i = 0, len = encoded.length; i < len; ++i) {
+                var b = encoded.charCodeAt(i) - 63;
+
+                current |= (b & 0x1f) << shift;
+
+                if (b < 0x20) {
+                    numbers.push(current);
+                    current = 0;
+                    shift = 0;
+                } else {
+                    shift += 5;
+                }
+            }
+
+            return numbers;
+        },
+
+        encodeSignedInteger: function (num) {
+            num = (num < 0) ? ~(num << 1) : (num << 1);
+            return this.encodeUnsignedInteger(num);
+        },
+
+        // This function is very similar to Google's, but I added
+        // some stuff to deal with the double slash issue.
+        encodeUnsignedInteger: function (num) {
+            var value, encoded = '';
+            while (num >= 0x20) {
+                value = (0x20 | (num & 0x1f)) + 63;
+                encoded += (String.fromCharCode(value));
+                num >>= 5;
+            }
+            value = num + 63;
+            encoded += (String.fromCharCode(value));
+
+            return encoded;
+        }
+    };
+
+    // Export Node module
+    if (typeof module === 'object' && typeof module.exports === 'object') {
+        module.exports = PolylineUtil;
+    }
+
+    // Inject functionality into Leaflet
+    if (typeof L === 'object') {
+        if (!(L.Polyline.prototype.fromEncoded)) {
+            L.Polyline.fromEncoded = function (encoded, options) {
+                return L.polyline(PolylineUtil.decode(encoded), options);
+            };
+        }
+        if (!(L.Polygon.prototype.fromEncoded)) {
+            L.Polygon.fromEncoded = function (encoded, options) {
+                return L.polygon(PolylineUtil.decode(encoded), options);
+            };
+        }
+
+        var encodeMixin = {
+            encodePath: function () {
+                return PolylineUtil.encode(this.getLatLngs());
+            }
+        };
+
+        if (!L.Polyline.prototype.encodePath) {
+            L.Polyline.include(encodeMixin);
+        }
+        if (!L.Polygon.prototype.encodePath) {
+            L.Polygon.include(encodeMixin);
+        }
+
+        L.PolylineUtil = PolylineUtil;
+    }
+})();
